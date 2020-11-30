@@ -1,0 +1,35 @@
+import error_calculations as ec
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+data = np.genfromtxt('trajectory3_analysis.csv', delimiter=',')
+print(np.shape(data))
+# error section, rms calc
+df = pd.DataFrame(data)
+df = df.dropna(how='any')
+print(np.shape(df))
+data = np.array(df)
+print(np.shape(data))
+
+# position_error(x, y, x_ref, y_ref)
+POS2D_RMS, POS2D_MAX, x_rms, x_max, y_rms, y_max = ec.position_error(data[:, 18], data[:, 19], data[:, 3], data[:, 4])
+
+# velocity RMS (v, ref_v)
+v_rms, v_max = ec.velocity_error(data[:, 16], data[:, 1])
+v1_rms, v1_max = ec.velocity_error(data[:, 6], data[:, 1])
+v2_rms, v2_max = ec.velocity_error(data[:, 11], data[:, 1])
+
+w1_rms, w1_max = ec.velocity_error(-data[:, 7], data[:, 2])
+w2_rms, w2_max = ec.velocity_error(-data[:, 12], data[:, 2])
+w_rms, w_max = ec.velocity_error(data[:, 17], data[:, 2])
+
+
+print(v_rms)
+print(v1_rms)
+print(v2_rms)
+print(w1_rms)
+print(w2_rms)
+print(w_rms)
+print(POS2D_RMS)
+
