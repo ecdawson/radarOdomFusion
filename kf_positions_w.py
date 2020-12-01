@@ -21,13 +21,13 @@ class kf_meter:
         # self.Q[6,6] = 0.00001
 
         #  covariance for noise of measurement model. want this to be dynamic eventually
-        self.R = np.eye(6)  ##CHANGE THIS
+        self.R = 0.1 * np.eye(6)  ##CHANGE THIS
 
         #  OR covariance for updating only vx vy.
         # self.R = 1 *np.eye(2)
 
         # FIGURE OUT CORRELATION VALUES
-        self.P = 10 * np.eye(9)
+        self.P = 5 * np.eye(9)
         self.corr_t_gyro = 3 * 3600  # 2*2000#3*3600 # seconds
         self.std_gyro = 0.5  # degree/sec
         self.corr_t_aodo = 0.1 * 3600  # seconds
@@ -81,31 +81,23 @@ class kf_meter:
         self.phi[8, 8] = -delta_t / self.corr_t_aodo
         self.phi[7, 7] = -delta_t / self.corr_t_gyro
 
-        # "measurement matrix
+        # measurement matrix
         # z = np.matrix(Z).T, [x, y, vx, vy, a]
         z = Z
 
-        # 'a priori estimate'
-        X_k_pri = np.dot((self.phi), (self.x))
-        P_k_pri = np.add(np.dot((self.phi), np.dot((self.P), (self.phi.T))),
-                         np.dot((self.G), np.dot((self.Q), (self.G.T))))
+        # a priori estimate
+        X_k_pri = np.dot(self.phi, self.x)
+        P_k_pri = np.add(np.dot(self.phi, np.dot(self.P, self.phi.T)),
+                         np.dot(self.G, np.dot(self.Q, self.G.T)))
 
-        # 'this is specific to visual odometry (?) adjusting R based on point count. we can adjust R based on how many
-        # object detecitions?'
-        # use factors that affect the radar -> make some kind of metric, turn reliability factors into a number
-        # (weighting factor)
-        # example: number of objects
-        # self.R = (0.001/(vo_points_cnt)) * np.eye(4) # feb_25/2 -> (vo_points_cnt)
-        # self.R[3,3] = self.R[3,3]/10
+        # calculate K based on R and a priori estimate
 
-        # 'calculate K based on R and a priori estimate'
-
-        Kg = np.dot(np.dot((P_k_pri), (self.H.T)),
-                    np.linalg.inv(np.add(np.dot((self.H), np.dot((P_k_pri), (self.H.T))), (self.R))))
+        Kg = np.dot(np.dot(P_k_pri, self.H.T),
+                    np.linalg.inv(np.add(np.dot(self.H, np.dot(P_k_pri, self.H.T)), self.R)))
 
         # 'a posteriori estimate'
-        self.x = np.add((X_k_pri), np.dot((Kg), np.subtract((z), np.dot((self.H), (X_k_pri)))))  # Z sholud be in data
-        self.P = np.dot(np.eye(9) - np.dot((Kg), (self.H)), (P_k_pri))  # P_k_post
+        self.x = np.add(X_k_pri, np.dot((Kg), np.subtract((z), np.dot(self.H, X_k_pri))))  # Z sholud be in data
+        self.P = np.dot(np.eye(9) - np.dot((Kg), self.H), P_k_pri)  # P_k_post
         self.P = 0.5 * np.add(self.P, self.P.T)
 
         # 'return x state variables of interest. we need to change these as we have different updates'
@@ -113,20 +105,26 @@ class kf_meter:
         return self.x, self.P
 
     def tune_vel(self, num_inliers1, num_inliers2):
-        if num_inliers1 > 40 or num_inliers2 > 40:
-            coef = 0.0001
-        # else:
-        else:
-            coef = 10000
+        output1 = self.MapOutput(num_inliers1)
+        output2 = self.MapOutput(num_inliers2)
+        # print(num_inliers1)
+        # print(num_inliers2)
+        # print(output1)
+        # print(output2)
+        coef = np.maximum(output1, output2)
         return coef
 
     def tune_omega(self, num_inliers1, num_inliers2):
-        if num_inliers1 > 30 or num_inliers2 > 30:
-            coef = 0.00001
+        if num_inliers1 > 25 or num_inliers2 > 25:
+            coef = 0.0001
         # else:
         else:
-            coef = 10000
+            coef = 100
         return coef
+        # output1 = self.MapOutput(num_inliers1)
+        # output2 = self.MapOutput(num_inliers2)
+        # coef = np.maximum(output1, output2)
+        # return coef
 
     def tune_R(self, direction_flag, num_inliers1, num_inliers2):
         # if direction_flag == 1:
@@ -137,6 +135,23 @@ class kf_meter:
         self.R[1, 1] = 1# v_coef  # y
         self.R[2, 2] = v_coef #vx
         self.R[3, 3] = v_coef #vy
-        self.R[4, 4] = w_coef # azimuth
+        self.R[4, 4] = 100# w_coef # azimuth
         self.R[5, 5] = w_coef  # omega
 
+
+    def MapOutput(self, detection):
+        minimumDetections = 5
+        maximumDetections = 45
+        Step = 5
+        intial = np.arange(minimumDetections, maximumDetections, Step)
+        output = np.asarray([100, 10, 1, 0.1, 0.01, 0.001, 0.0001, 0])
+        lowerBoundary = detection < intial[0]
+        higherBoundary = detection > intial[-1]
+        if lowerBoundary:
+            return output[0]
+        elif higherBoundary or np.nan:
+            return output[-1]
+        for i in range(len(intial)-1):
+            InRange = (detection >= intial[i]) & (detection <= intial[i+1])
+            if InRange:
+                return output[i]

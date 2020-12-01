@@ -56,7 +56,7 @@ radar_y = []
 previous_time = time
 
 # instantiate kf meter class
-initial_position_estimate = [46.57, 30.91, 0, 0.5, 0.5, 0, 0, 0, 0]
+initial_position_estimate = [46.57, 30.91, 0, 0.2, 0.2, 0, 0, 0, 0]
 kf = kf_meter(0, 0, 1, initial_position_estimate, 0, 0)
 
 # initialize riss class
@@ -95,8 +95,12 @@ riss_w = []
 odo_vel = []
 
 corrections = np.zeros(9)
+correction_data = []
 corr_vx = 0
 corr_vy = 0
+
+untouched_vx = []
+untouched_vy = []
 
 for i in range(1, 2000):
     rad_sample, imu_sample, i_rad, i_imu, time = synch_for_fusion.get_synched_samples(i_rad, i_imu)
@@ -126,11 +130,12 @@ for i in range(1, 2000):
     un_vx, un_vy, _, _, _, _, un_x, un_y, un_a = untouched_riss.update_disp_meters(fx, fy, wz, time_diff,
                                                                              gyro_bias, velocity)
     odo_vel.append(velocity)
-    vx_riss.append(vx), vy_riss.append(vy)
     untouched_x = untouched_x + un_x
     untouched_y = untouched_y + un_y
     unt_x.append(untouched_x)
     unt_y.append(untouched_y)
+    untouched_vx.append(un_vx)
+    untouched_vy.append(un_vy)
     # vx, vy, h, accel, pitch, roll, del_x, del_y, del_a = single_metre.update_disp_meters(fx, fy, wz, time_diff,
             # gyro_bias, velocity)
 
@@ -140,7 +145,7 @@ for i in range(1, 2000):
     x_rad, y_rad, azi_rad, del_rad_x, del_rad_y, del_rad_a, vx_rad, vy_rad = estimations.update_radar_pos(x_rad, y_rad, azi_rad,
                                                                                           rad_vel, rad_w, time_diff)
     radar_velocities.append(rad_vel)
-    vx_rad_array.append(vx_rad), vy_rad_array.append(vy_rad)
+
     radar_azimuths.append(np.rad2deg(azi_rad))
     riss_azimuths.append(azi)
     # compute Z matrix: subtract x,y,vx,vy,Azimuth
@@ -151,9 +156,13 @@ for i in range(1, 2000):
 
     # Z = [x_pos-x_rad, y_pos-y_rad, vx-vx_rad, vy-vy_rad, azi-np.rad2deg(azi_rad)]
     Z_w = [x_pos - x_rad, y_pos - y_rad, vx - vx_rad, vy - vy_rad, wz-rad_w, azi - np.rad2deg(azi_rad)]
+
+    vx_rad_array.append(vx_rad), vy_rad_array.append(vy_rad)
+    vx_riss.append(vx), vy_riss.append(vy)
+
     # Z_w = [velocity - rad_vel, wz - rad_w]
     radar_w.append(rad_w), riss_w.append(wz)
-    # z_vectors.append(Z)
+    z_vectors.append(Z_w)
     # send Z matrix into KF with time_diff, azi and acceleration from odometer
     # direction_flag = data_rad1[i_rad - 1, 7]
     num_inliers1 = rad_sample[5]
@@ -166,6 +175,8 @@ for i in range(1, 2000):
 
     x_pos_errors.append(corrections[0])
     y_pos_errors.append(corrections[1])
+
+    correction_data.append(corrections)
 
     P_set1.append(P[0, 0])
     P_set2.append(P[1, 1])
@@ -183,8 +194,8 @@ for i in range(1, 2000):
     azi = azi - corrections[6]
     # print(corrections[6])
     # h is position 2
-    corr_vx = corrections[3]
-    corr_vy = corrections[4]
+    corr_vx = 0# corrections[3]
+    corr_vy = 0 #corrections[4]
     # vu is position 5
     # acceleration = acceleration - corrections[7]
     # omega = omega - corrections[8]
@@ -208,6 +219,7 @@ for i in range(1, 2000):
     previous_time = next_time
     # print(corrections)
 
+correction_data = np.array(correction_data)
 distance_travelled = np.sum(ref_sol[1:, 1])*(50*0.001)
 print('distance travelled', distance_travelled)
 z_vectors = np.array(z_vectors)
@@ -230,6 +242,7 @@ print('v rms:', v_rms)
 print('v max:', v_max)
 print('w rms:', w_rms)
 print('w max:', w_max)
+
 
 # print('riss alone results')
 # riss_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, unt_x, unt_y))
@@ -268,13 +281,16 @@ plt.xlabel('X Position (m)')
 # plt.show()
 
 plt.figure(3)
-plt.plot(vx_riss, label='vx riss')
+plt.plot(vx_riss, label='vx riss/radar')
 plt.plot(vx_rad_array, label='vx radar')
+plt.plot(untouched_vx, label='vx riss standalone')
+
 plt.legend()
 
 plt.figure(4)
-plt.plot(vy_riss, label='vy riss')
+plt.plot(vy_riss, label='vy riss/radar')
 plt.plot(vy_rad_array, label='vy radar')
+plt.plot(untouched_vy, label='vy riss standalone')
 plt.legend()
 
 plt.figure(5)
@@ -287,23 +303,50 @@ plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
 plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
 plt.legend()
 
-# plt.figure(13)
-# plt.plot(z_vectors[:, 0], label='x')
-# plt.legend()
-# plt.figure(14)
-# plt.plot(z_vectors[:, 1], label='y')
-# plt.legend()
-# plt.figure(15)
-# plt.plot(z_vectors[:, 2], label='vx')
-# plt.legend()
-# plt.figure(16)
-# plt.plot(z_vectors[:, 3], label='vy')
-# plt.legend()
-# plt.figure(17)
-# plt.plot(z_vectors[:, 4], label='azimuth')
-# plt.legend()
+plt.figure(7)
+plt.plot(radar_data[:2000, 4], '.', label='inliers 1')
+plt.legend()
+
+plt.figure(8)
+plt.plot(radar_data[:2000, 9], '.', label='inliers 2')
+plt.legend()
+
 plt.figure(18)
 plt.plot(radar_azimuths, label='radar azimuths')
 plt.plot(riss_azimuths, label='riss azimuths')
 plt.legend()
+
+plt.figure(11)
+plt.plot(z_vectors[:, 0], label='z x')
+plt.legend()
+plt.figure(14)
+plt.plot(z_vectors[:, 1], label='z y')
+plt.legend()
+plt.figure(15)
+plt.plot(z_vectors[:, 2], label='z vx')
+plt.legend()
+plt.figure(16)
+plt.plot(z_vectors[:, 3], label='z vy')
+plt.legend()
+plt.figure(17)
+plt.plot(z_vectors[:, 4], label='z azimuth')
+plt.legend()
+
+plt.figure(9)
+plt.plot(P_set1, label='x')
+plt.plot(P_set2, label='y')
+plt.plot(P_set3, label='z')
+plt.plot(P_set4, label='vx')
+plt.plot(P_set5, label='vy')
+plt.plot(P_set6, label='vz')
+plt.plot(P_set7, label='A')
+plt.plot(P_set8, label='a_odo')
+plt.plot(P_set9, label='w')
+plt.legend()
+
+plt.figure(10)
+plt.plot(correction_data[:, 3], label='vx corrections')
+plt.plot(correction_data[:, 4], label='vy corrections')
+plt.legend()
+
 plt.show()

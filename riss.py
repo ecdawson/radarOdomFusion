@@ -98,8 +98,8 @@ class riss:
         pitch = np.rad2deg(np.arcsin((self.fy - self.acc_od) / g))
         roll = -1 * np.rad2deg(np.arcsin((self.fx - self.v_od * self.wz) / (g * np.cos(np.deg2rad(pitch)))))
 
-        self.ve = self.v_od * np.sin(np.deg2rad(new_azimuth)) * np.cos(np.deg2rad(pitch)) - corr_vx
-        self.vn = self.v_od * np.cos(np.deg2rad(new_azimuth)) * np.cos(np.deg2rad(pitch)) - corr_vy
+        self.ve = self.v_od * np.sin(np.deg2rad(new_azimuth)) * np.cos(np.deg2rad(pitch)) - corr_vy
+        self.vn = self.v_od * np.cos(np.deg2rad(new_azimuth)) * np.cos(np.deg2rad(pitch)) - corr_vx
         self.vu = self.v_od * np.sin(np.deg2rad(pitch))
 
         del_x = self.vn * delta_time
