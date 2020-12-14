@@ -286,6 +286,12 @@ print('w rms:', w_rms)
 print('w max:', w_max)
 
 #
+e_time, e_x, e_y, absolute_errors = trajectory_errors.errors_v_time(ref_sol, fused_data)
+percent_sub50cm, percent_sub1m, percent_sub1_5m, percent_sub2m = trajectory_errors.percentage_analysis(absolute_errors)
+print('percent of time error < 50 cm:', percent_sub50cm)
+print('percent of time error < 1 m:', percent_sub1m)
+print('percent of time error < 1.5 m:', percent_sub1_5m)
+print('percent of time error < 2 m:', percent_sub2m)
 ####### PLOTS #################
 # Kalman filter, riss and radar plots
 plt.figure(1)
@@ -337,7 +343,7 @@ plt.figure(8)
 plt.plot(radar_data[:2000, 9], '.', label='inliers 2')
 plt.legend()
 
-plt.figure(18)
+plt.figure(16)
 plt.plot(radar_azimuths, label='radar azimuths')
 plt.plot(riss_azimuths, label='riss azimuths')
 plt.legend()
@@ -351,7 +357,6 @@ plt.legend()
 # plt.figure(15)
 # plt.plot(z_vectors[:, 2], label='z vx')
 # plt.legend()
-plt.figure(16)
 # plt.plot(z_vectors[:, 3], label='z vy')
 # plt.legend()
 # plt.figure(17)
@@ -395,5 +400,12 @@ plt.legend()
 
 plt.figure(17)
 plt.plot(odo_vel, 'b.')
+
+##plots of error vs time to see where error is greatest
+
+plt.figure(18)
+plt.plot(e_time, e_x, label='x error vs time')
+plt.plot(e_time, e_y, label='y error vs time')
+plt.legend()
 
 plt.show()

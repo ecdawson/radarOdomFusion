@@ -34,3 +34,8 @@ def position_error(x_meters, y_meters, ref_x_meters, ref_y_meters):
     POS2D_RMS = np.sqrt((x_rms ** 2) + (y_rms ** 2))
     POS2D_MAX = np.sqrt((x_max ** 2) + (y_max ** 2))
     return POS2D_RMS, POS2D_MAX, x_rms, x_max, y_rms, y_max
+
+def error_notRMS(solution, reference):
+    error = [a_i - b_i for a_i, b_i in zip(solution, reference)]
+    return error
+
