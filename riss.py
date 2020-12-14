@@ -30,11 +30,17 @@ class riss:
         self.delta_azi = 0
 
         self.azimuth = azimuth
+        self.bias = 0
+        self.stopped = 0
+        self.omegas = 0
 
     def update(self, fx, fy, wz, delta_time, gyro_bias, velocity):
         self.fx = -fx
         self.fy = -fy
         self.wz = -wz
+
+        self.check_stationary(velocity, wz)
+        gyro_bias = self.bias
 
         R_m = 6378137.0
         R_n = 6356752.3
@@ -76,6 +82,9 @@ class riss:
         self.fx = -fx
         self.fy = -fy
         self.wz = wz
+
+        self.check_stationary(velocity, wz)
+        gyro_bias = self.bias
 
         R_m = 6378137.0
         R_n = 6356752.3
@@ -120,6 +129,9 @@ class riss:
         self.fx = -fx
         self.fy = -fy
         self.wz = wz
+
+        self.check_stationary(velocity, wz)
+        gyro_bias = self.bias
 
         R_m = 6378137.0
         R_n = 6356752.3
@@ -170,3 +182,16 @@ class riss:
         self.x_pos = correct_x
         self.y_pos = correct_y
         self.azimuth = correct_azi
+
+    def check_stationary(self, vel_odo, wz):
+        if self.stopped:
+            if -0.02 < vel_odo < 0.02:
+                self.omegas.append(wz)
+            else:
+                self.bias = np.mean(self.omegas)
+        if not self.stopped:
+            if -0.02 < vel_odo < 0.02:
+                self.stopped = 1
+                self.omegas = []
+                self.omegas.append(wz)
+

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from kf_positions_w import kf_meter
 import trajectory_errors
 # from kf_vw import kf_meter
-# from change_disp_kf import ChangeDispKF
 
 ref_sol = np.genfromtxt('ref_generated.csv', delimiter=',')
 floor_map = io.loadmat('floor_map.mat')
@@ -102,6 +101,10 @@ corr_vy = 0
 untouched_vx = []
 untouched_vy = []
 
+outage_starts = []
+outage_ends = []
+outage_positions = []
+
 for i in range(1, 2000):
     rad_sample, imu_sample, i_rad, i_imu, time = synch_for_fusion.get_synched_samples(i_rad, i_imu)
 
@@ -110,6 +113,7 @@ for i in range(1, 2000):
     fy = imu_sample[2]
     fz = imu_sample[3]
     wz = -imu_sample[4]
+    w_original = -imu_sample[4]
     velocity = imu_sample[5]
 
     next_time = time
@@ -127,7 +131,7 @@ for i in range(1, 2000):
     x_pos, y_pos, vx, vy, h, azi, accel, pitch, roll, del_x, del_y, del_a = single_metre.update_metres(fx, fy,
         wz, time_diff, gyro_bias,velocity, corr_vx, corr_vy)
 
-    un_vx, un_vy, _, _, _, _, un_x, un_y, un_a = untouched_riss.update_disp_meters(fx, fy, wz, time_diff,
+    un_vx, un_vy, _, _, _, _, un_x, un_y, un_a = untouched_riss.update_disp_meters(fx, fy, w_original, time_diff,
                                                                              gyro_bias, velocity)
     odo_vel.append(velocity)
     untouched_x = untouched_x + un_x
@@ -153,14 +157,22 @@ for i in range(1, 2000):
     # vy - rad_sample[4], azi - rad_sample[5]]
 
     # z_diff = [del_x - del_rad_x, del_y - del_rad_y, vx - rad_sample[3], vy - rad_sample[4], del_a - del_rad_a]
+    azi_diff_z = azi-np.rad2deg(azi_rad)
+    if azi_diff_z > 180:
+        azi_diff_z = azi_diff_z - 360
+    if azi_diff_z < -180:
+        azi_diff_z = azi_diff_z + 360
+    # Z_w = [0, 0, vx-vx_rad, vy-vy_rad, azi_diff_z]
+    Z_w = [x_pos - x_rad, y_pos - y_rad, vx - vx_rad, vy - vy_rad, azi_diff_z]
+    # Z_w = [velocity - rad_vel, wz-rad_w]
+    # Z_w = [x_pos - x_rad, y_pos - y_rad, vx - vx_rad, vy - vy_rad, wz-rad_w, azi - np.rad2deg(azi_rad)]
 
-    # Z = [x_pos-x_rad, y_pos-y_rad, vx-vx_rad, vy-vy_rad, azi-np.rad2deg(azi_rad)]
-    Z_w = [x_pos - x_rad, y_pos - y_rad, vx - vx_rad, vy - vy_rad, wz-rad_w, azi - np.rad2deg(azi_rad)]
+    # NO X Y IN MEASUREMENT
+    # Z_w = [vx - vx_rad, vy - vy_rad, wz-rad_w]
 
     vx_rad_array.append(vx_rad), vy_rad_array.append(vy_rad)
     vx_riss.append(vx), vy_riss.append(vy)
 
-    # Z_w = [velocity - rad_vel, wz - rad_w]
     radar_w.append(rad_w), riss_w.append(wz)
     z_vectors.append(Z_w)
     # send Z matrix into KF with time_diff, azi and acceleration from odometer
@@ -170,8 +182,9 @@ for i in range(1, 2000):
     # num_inliers = data_rad1[i_rad - 1, 6]
 
     kf.tune_R(None, num_inliers1, num_inliers2)
-    #corrections, P = kf.update(Z, azi, accel, time_diff, pitch)
-    corrections, P = kf.update(Z_w, azi, accel, time_diff, pitch)
+    start_out, end_out = kf.handle_outage(num_inliers1, num_inliers2, time)
+    is_outage = kf.is_outage()
+    corrections, P = kf.update(Z_w, azi, accel, time_diff, pitch, num_inliers1, num_inliers2)
 
     x_pos_errors.append(corrections[0])
     y_pos_errors.append(corrections[1])
@@ -194,8 +207,8 @@ for i in range(1, 2000):
     azi = azi - corrections[6]
     # print(corrections[6])
     # h is position 2
-    corr_vx = 0# corrections[3]
-    corr_vy = 0 #corrections[4]
+    corr_vx = corrections[3]
+    corr_vy = corrections[4]
     # vu is position 5
     # acceleration = acceleration - corrections[7]
     # omega = omega - corrections[8]
@@ -218,7 +231,20 @@ for i in range(1, 2000):
     time_differences.append(time_diff)
     previous_time = next_time
     # print(corrections)
+    if is_outage:
+        outage_positions.append((x_pos, y_pos))
+    if start_out == 1:
+        outage_starts.append((x_pos, y_pos))
+    if end_out:
+        outage_starts.append((x_pos, y_pos))
 
+outage_starts = np.array(outage_starts)
+print('start outages', np.shape(outage_starts))
+outage_ends = np.array(outage_ends)
+outage_positions = np.array(outage_positions)
+
+confidence_list = kf.get_confidence_list()
+outage_times = np.array(kf.get_outages())
 correction_data = np.array(correction_data)
 distance_travelled = np.sum(ref_sol[1:, 1])*(50*0.001)
 print('distance travelled', distance_travelled)
@@ -244,20 +270,20 @@ print('w rms:', w_rms)
 print('w max:', w_max)
 
 
-# print('riss alone results')
-# riss_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, unt_x, unt_y))
-# pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, riss_data)
-# print('total time:', total_time, 'minutes')
-# print('riss position 2d rms:', pos2d_rms)
-# print('riss position 2d max:', pos2d_max)
-# print('x rms:', x_rms)
-# print('x max:', x_max)
-# print('y rms:', y_rms)
-# print('y max:', y_max)
-# print('v rms:', v_rms)
-# print('v max:', v_max)
-# print('w rms:', w_rms)
-# print('w max:', w_max)
+print('riss alone results')
+riss_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, unt_x, unt_y))
+pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, riss_data)
+print('total time:', total_time, 'minutes')
+print('riss position 2d rms:', pos2d_rms)
+print('riss position 2d max:', pos2d_max)
+print('x rms:', x_rms)
+print('x max:', x_max)
+print('y rms:', y_rms)
+print('y max:', y_max)
+print('v rms:', v_rms)
+print('v max:', v_max)
+print('w rms:', w_rms)
+print('w max:', w_max)
 
 #
 ####### PLOTS #################
@@ -316,21 +342,21 @@ plt.plot(radar_azimuths, label='radar azimuths')
 plt.plot(riss_azimuths, label='riss azimuths')
 plt.legend()
 
-plt.figure(11)
-plt.plot(z_vectors[:, 0], label='z x')
-plt.legend()
-plt.figure(14)
-plt.plot(z_vectors[:, 1], label='z y')
-plt.legend()
-plt.figure(15)
-plt.plot(z_vectors[:, 2], label='z vx')
-plt.legend()
+# plt.figure(11)
+# plt.plot(z_vectors[:, 0], label='z x')
+# plt.legend()
+# plt.figure(14)
+# plt.plot(z_vectors[:, 1], label='z y')
+# plt.legend()
+# plt.figure(15)
+# plt.plot(z_vectors[:, 2], label='z vx')
+# plt.legend()
 plt.figure(16)
-plt.plot(z_vectors[:, 3], label='z vy')
-plt.legend()
-plt.figure(17)
-plt.plot(z_vectors[:, 4], label='z azimuth')
-plt.legend()
+# plt.plot(z_vectors[:, 3], label='z vy')
+# plt.legend()
+# plt.figure(17)
+# plt.plot(z_vectors[:, 4], label='z azimuth')
+# plt.legend()
 
 plt.figure(9)
 plt.plot(P_set1, label='x')
@@ -348,5 +374,26 @@ plt.figure(10)
 plt.plot(correction_data[:, 3], label='vx corrections')
 plt.plot(correction_data[:, 4], label='vy corrections')
 plt.legend()
+
+plt.figure(12)
+plt.plot(outage_times[:, 0], outage_times[:, 1], label='outages')
+plt.legend()
+
+plt.figure(13)
+plt.plot(corrected_x, corrected_y, label='RISS/Radar')
+plt.plot(unt_x, unt_y, label='RISS')
+plt.plot(radar_x, radar_y, label='Radar')
+plt.plot(outage_positions[:, 0], outage_positions[:, 1], 'r.')
+plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+plt.legend()
+plt.ylabel('Y Position (m)')
+plt.xlabel('X Position (m)')
+
+plt.figure(16)
+plt.plot(correction_data[:, 8], label='w corrections')
+plt.legend()
+
+plt.figure(17)
+plt.plot(odo_vel, 'b.')
 
 plt.show()
