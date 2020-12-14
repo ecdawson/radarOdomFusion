@@ -6,8 +6,13 @@ import numpy as np
 class kf_meter:
     def __init__(self, h, azi, delta_t, initial_guess, a_odometer=0, pitch=0):
         self.threshold = 15 # Threshold for outage
-        self.upper_threshold = 28
+        self.upper_threshold = 25
+        self.outage_duration_thresh = 3
         self.outage_times = []
+        self.sensor_confidence = []
+        self.outage = 0
+        self.outage_start_time = 0
+
         azi = np.rad2deg(azi)
         pitch = np.rad2deg(pitch)
         #  state matrix = [x,y,h,v_x,v_y,vu,A,acceleration,w]
@@ -80,9 +85,6 @@ class kf_meter:
         # self.H[0, 3] = 1 # vx
         # self.H[1, 4] = 1 # vy
         # self.H[2, 8] = 1 # w
-
-        self.sensor_confidence = []
-        self.outage = 0
 
         # UPDATING ONLY VX VY
         # self.H[0,3] = 1
@@ -223,6 +225,23 @@ class kf_meter:
             if num_inliers1 > self.upper_threshold and num_inliers2 > self.upper_threshold:
                 self.outage = 0
                 outage_end = 1
+        self.outage_times.append((time, self.outage))
+        return outage_start, outage_end
+
+    def handle_outage_with_duration_constraint(self, num_inliers1, num_inliers2, time):
+        outage_start = 0
+        outage_end = 0
+        if not self.outage:
+            if num_inliers1 < self.threshold and num_inliers2 < self.threshold:
+                self.outage = 1
+                outage_start = 1
+                self.outage_start_time = time
+        else:
+            outage_duration = (time - self.outage_start_time)/1000
+            if num_inliers1 > self.upper_threshold and num_inliers2 > self.upper_threshold:
+                if outage_duration >= self.outage_duration_thresh:
+                    self.outage = 0
+                    outage_end = 1
         self.outage_times.append((time, self.outage))
         return outage_start, outage_end
 

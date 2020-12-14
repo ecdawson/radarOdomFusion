@@ -124,7 +124,7 @@ for i in range(1, 2000):
     time_diff = time_diff / 1000
 
     # CORRECT PARAMETERS USING PREVIOUS KF CORRECTIONS
-    wz = wz - corrections[8]
+    # wz = wz - corrections[8]
 
 
     # RISS UPDATE
@@ -182,7 +182,8 @@ for i in range(1, 2000):
     # num_inliers = data_rad1[i_rad - 1, 6]
 
     kf.tune_R(None, num_inliers1, num_inliers2)
-    start_out, end_out = kf.handle_outage(num_inliers1, num_inliers2, time)
+    # start_out, end_out = kf.handle_outage(num_inliers1, num_inliers2, time)
+    start_out, end_out = kf.handle_outage_with_duration_constraint(num_inliers1, num_inliers2, time)
     is_outage = kf.is_outage()
     corrections, P = kf.update(Z_w, azi, accel, time_diff, pitch, num_inliers1, num_inliers2)
 

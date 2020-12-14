@@ -3,9 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b92ffc11-b277-4d10-a6ce-00a071ff2f94" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/error_calculations.py" beforeDir="false" afterPath="$PROJECT_DIR$/error_calculations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fusion_positions.py" beforeDir="false" afterPath="$PROJECT_DIR$/fusion_positions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trajectory_errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/trajectory_errors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kf_positions_w.py" beforeDir="false" afterPath="$PROJECT_DIR$/kf_positions_w.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -162,6 +161,9 @@
         <item itemvalue="Python.extended_static_detections" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="ServiceViewManager">
+    <option name="showServicesTree" value="false" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
