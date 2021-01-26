@@ -77,14 +77,15 @@ class riss:
         # lat , long , h, ve, vn, vu, azi, a_od, w_z [states] (pitch & roll) ?
         return self.latitude, self.longitude, self.vn, self.ve, self.height, self.azimuth
 
-    def update_metres(self, fx, fy, wz, delta_time, gyro_bias, velocity, corr_vx, corr_vy):
+    def update_metres(self, fx, fy, wz, delta_time, gyro_bias, velocity, corr_vx, corr_vy, correct):
         #  also want to return change in x, y Azimuth.
         self.fx = -fx
         self.fy = -fy
         self.wz = wz
 
-        self.check_stationary(velocity, wz)
-        gyro_bias = self.bias
+        if correct:
+            self.check_stationary(velocity, wz)
+            gyro_bias = self.bias
 
         R_m = 6378137.0
         R_n = 6356752.3
@@ -124,14 +125,15 @@ class riss:
         # l at , long , h, ve, vn, vu, azi, a_od, w_z [states] (pitch & roll) ?
         return self.x_pos, self.y_pos, self.vn, self.ve, self.height, self.azimuth, self.acc_od, pitch, roll, del_x, del_y, del_a
 
-    def update_disp_meters(self, fx, fy, wz, delta_time, gyro_bias, velocity):
+    def update_disp_meters(self, fx, fy, wz, delta_time, gyro_bias, velocity, correct):
         #  also want to return change in x, y Azimuth.
         self.fx = -fx
         self.fy = -fy
         self.wz = wz
 
-        self.check_stationary(velocity, wz)
-        gyro_bias = self.bias
+        if correct:
+            self.check_stationary(velocity, wz)
+            gyro_bias = self.bias
 
         R_m = 6378137.0
         R_n = 6356752.3

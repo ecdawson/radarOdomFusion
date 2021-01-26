@@ -11,18 +11,21 @@ floor_map = io.loadmat('floor_map.mat')
 radar_data = np.genfromtxt('r1r2estimates.csv', delimiter=',')
 ref_sol = np.genfromtxt('ref_generated.csv', delimiter=',')
 
+# FrameCnt,ID,NumPCloud,SNR_dB,Range_m,Vel_ms,Azimuth_deg,Elevation_deg,Infrastructure,HostSpeed_ms,YawRate_degs,
+# Wheelspd_pulse_fl,Wheelspd_pulse_fr,Wheelspd_pulse_rl,Wheelspd_pulse_rr,Gearbox,SteerWheel,TimeStamp_ms
+
 wheel_tex = np.genfromtxt('#3#4_PointCloudCAN.csv', delimiter=',')
 # wheel_tex = wheel_tex[:160000, :]
 # rad dat time, x, y, v, w, inliers1, inliers2
-rad_dat = np.column_stack((radar_data[1:-1, 0], radar_data[1:-1, 11], radar_data[1:-1, 12], radar_data[1:-1, 9],
-                           radar_data[1:-1, 10], radar_data[1:-1, 4], radar_data[1:-1, 8]))
+rad_dat = np.column_stack((radar_data[1:-1, 0], radar_data[1:-1, 13], radar_data[1:-1, 14], radar_data[1:-1, 11],
+                           radar_data[1:-1, 12], radar_data[1:-1, 4], radar_data[1:-1, 9]))
 
 filt_w = signal.savgol_filter(-wheel_tex[1:-1, 10], 39, 3)
 wheel_tex_dat = np.column_stack((wheel_tex[1:-1, -1], wheel_tex[1:-1, 9], filt_w))
 
-x_m = 64.298
-y_m = -74.623
-azimuth_start = 0
+x_m = 46.57
+y_m = 30.91
+azimuth_start = -3.13629907
 
 x_rad = x_m
 y_rad = y_m
@@ -50,7 +53,7 @@ rad_sample, imu_sample, i_rad, i_wheel, time = synch_for_fusion.get_synched_samp
 previous_time = time
 time_stamps.append(time)
 
-for i in range(1, 5000):
+for i in range(1, 4000):
     rad_sample, wheel_sample, i_rad, i_wheel, time = synch_for_fusion.get_synched_samples(i_rad, i_wheel)
     w_wheel = wheel_sample[2]
     v_wheel = wheel_sample[1]
@@ -78,13 +81,14 @@ for i in range(1, 5000):
     azi_wheels.append(azimuth)
 
     # radar update
-    x_rad, y_rad, azi_rad, _, _, _ = estimations.update_radar_pos(x_rad, y_rad, azi_rad, v_radar, w_radar, time_diff)
+    x_rad, y_rad, azi_rad, _, _, _, vx_rad, vy_rad = estimations.update_radar_pos(x_rad, y_rad, azi_rad, v_radar, w_radar, time_diff)
     rad_x_positions.append(x_rad)
     rad_y_positions.append(y_rad)
     azi_rads.append(azi_rad)
 
     previous_time = next_time
 
+print(wheel_x)
 # Error Calculations
 #RMS
 wheel_results = np.column_stack((time_stamps[1:], v_wheels, wz_wheels, wheel_x, wheel_y))

@@ -109,8 +109,8 @@ class kf_meter:
         self.phi[4, 7] = delta_t * np.cos(np.deg2rad(azi)) * np.cos(np.deg2rad(pitch))
         self.phi[5, 7] = delta_t * np.sin(np.deg2rad(pitch))
         self.phi[6, 8] = delta_t
-        self.phi[8, 8] = -delta_t / self.corr_t_aodo
-        self.phi[7, 7] = -delta_t / self.corr_t_gyro
+        self.phi[8, 8] = -delta_t / self.corr_t_gyro
+        self.phi[7, 7] = -delta_t / self.corr_t_aodo
 
         # measurement matrix
         # z = np.matrix(Z).T, [x, y, vx, vy, a]

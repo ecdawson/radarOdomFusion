@@ -1,6 +1,7 @@
 from data_synchronization import data_synch
 import estimations
 import math
+import matplotlib.animation as animation
 from riss import riss
 import numpy as np
 from scipy import io
@@ -11,6 +12,7 @@ import trajectory_errors
 # from kf_vw import kf_meter
 
 ref_sol = np.genfromtxt('ref_generated.csv', delimiter=',')
+ref_sol = ref_sol[0:4200, :]
 floor_map = io.loadmat('floor_map.mat')
 imu_odo = np.genfromtxt('imu_and_odo.csv', delimiter=',')
 imu_odo = np.transpose(imu_odo)
@@ -54,6 +56,8 @@ radar_x = []
 radar_y = []
 previous_time = time
 
+reference_x = []
+reference_y = []
 # instantiate kf meter class
 initial_position_estimate = [46.57, 30.91, 0, 0.2, 0.2, 0, 0, 0, 0]
 kf = kf_meter(0, 0, 1, initial_position_estimate, 0, 0)
@@ -105,6 +109,8 @@ outage_starts = []
 outage_ends = []
 outage_positions = []
 
+out_flag = []
+
 for i in range(1, 2000):
     rad_sample, imu_sample, i_rad, i_imu, time = synch_for_fusion.get_synched_samples(i_rad, i_imu)
 
@@ -129,10 +135,10 @@ for i in range(1, 2000):
 
     # RISS UPDATE
     x_pos, y_pos, vx, vy, h, azi, accel, pitch, roll, del_x, del_y, del_a = single_metre.update_metres(fx, fy,
-        wz, time_diff, gyro_bias,velocity, corr_vx, corr_vy)
+        wz, time_diff, gyro_bias,velocity, corr_vx, corr_vy, 1)
 
     un_vx, un_vy, _, _, _, _, un_x, un_y, un_a = untouched_riss.update_disp_meters(fx, fy, w_original, time_diff,
-                                                                             gyro_bias, velocity)
+                                                                             gyro_bias, velocity, 0)
     odo_vel.append(velocity)
     untouched_x = untouched_x + un_x
     untouched_y = untouched_y + un_y
@@ -234,11 +240,20 @@ for i in range(1, 2000):
     # print(corrections)
     if is_outage:
         outage_positions.append((x_pos, y_pos))
+        out_flag.append(1)
+    if not is_outage:
+        out_flag.append(0)
     if start_out == 1:
         outage_starts.append((x_pos, y_pos))
     if end_out:
         outage_starts.append((x_pos, y_pos))
 
+    array = np.asarray(ref_sol[1:, 0])
+    idx = (np.abs(array - time)).argmin()
+    reference_x.append(ref_sol[idx, 3])
+    reference_y.append(ref_sol[idx, 4])
+
+print(np.shape(reference_x))
 outage_starts = np.array(outage_starts)
 print('start outages', np.shape(outage_starts))
 outage_ends = np.array(outage_ends)
@@ -260,7 +275,7 @@ total_time = (time_stamps[-1]-time_stamps[0])/(1000 * 60) # time in minutes
 print('total time:', total_time, 'minutes')
 print('fusion position 2d rms:', pos2d_rms)
 print('fusion position 2d max:', pos2d_max)
-# print('percentage of fusion position error to distance travelled', (pos2d_rms/distance_travelled)*100)
+
 print('x rms:', x_rms)
 print('x max:', x_max)
 print('y rms:', y_rms)
@@ -269,6 +284,14 @@ print('v rms:', v_rms)
 print('v max:', v_max)
 print('w rms:', w_rms)
 print('w max:', w_max)
+print('percentage of fusion position error to distance travelled', (pos2d_rms/distance_travelled)*100)
+print('percentage of fusion position error to distance travelled', (pos2d_max/distance_travelled)*100)
+print('percentage of fusion position error to distance travelled', (x_rms/distance_travelled)*100)
+print('percentage of fusion position error to distance travelled', (x_max/distance_travelled)*100)
+print('percentage of fusion position error to distance travelled', (y_rms/distance_travelled)*100)
+print('percentage of fusion position error to distance travelled', (y_max/distance_travelled)*100)
+
+
 
 
 print('riss alone results')
@@ -295,118 +318,180 @@ print('percent of time error < 1.5 m:', percent_sub1_5m)
 print('percent of time error < 2 m:', percent_sub2m)
 ####### PLOTS #################
 # Kalman filter, riss and radar plots
-plt.figure(1)
-plt.plot(corrected_x, corrected_y, label='RISS/Radar')
-plt.plot(unt_x, unt_y, label='RISS')
-# plt.plot(riss_results[:, 1], riss_results[:, 2], label='riss')
-# plt.plot(radar[:,1],radar[:,2],label='radar')
-# plt.plot(radar_x, radar_y, label='radar')
-# plt.plot(inc_x, inc_y, label='incremental riss test')
-
-plt.plot(radar_x, radar_y, label='Radar')
-plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
-plt.legend()
-plt.ylabel('Y Position (m)')
-plt.xlabel('X Position (m)')
-
+# plt.figure(1)
+# plt.plot(corrected_x, corrected_y, label='RISS/Radar')
+# plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
+# # plt.plot(riss_results[:, 1], riss_results[:, 2], label='riss')
+# # plt.plot(radar[:,1],radar[:,2],label='radar')
+# # plt.plot(radar_x, radar_y, label='radar')
+# # plt.plot(inc_x, inc_y, label='incremental riss test')
+#
+# #plt.plot(radar_x, radar_y, label='Radar')
+# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# # plt.grid()
+# plt.legend()
+# plt.ylabel('Y Position (m)')
+# plt.xlabel('X Position (m)')
+#
 # plt.figure(2)
-# plt.plot(x_pos_errors)
+# plt.plot(unt_x, unt_y, label='RISS')
+# plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
+# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# plt.legend()
+# # plt.plot(x_pos_errors)
+# # plt.show()
+#
+# plt.figure(20)
+# plt.plot(radar_x, radar_y, label='Radar')
+# plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
+# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# plt.legend()
+#
+# plt.figure(3)
+# plt.plot(vx_riss, label='vx riss/radar')
+# plt.plot(vx_rad_array, label='vx radar')
+# plt.plot(untouched_vx, label='vx riss standalone')
+#
+# plt.legend()
+#
+# plt.figure(4)
+# plt.plot(vy_riss, label='vy riss/radar')
+# plt.plot(vy_rad_array, label='vy radar')
+# plt.plot(untouched_vy, label='vy riss standalone')
+# plt.legend()
+#
+# plt.figure(5)
+# plt.plot(riss_w, label='w riss')
+# plt.plot(radar_w, label='w radar')
+# plt.legend()
+#
+# plt.figure(6)
+# plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
+# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# plt.legend()
+#
+# plt.figure(7)
+# plt.plot(radar_data[:2000, 4], '.', label='inliers 1')
+# plt.legend()
+#
+# plt.figure(8)
+# plt.plot(radar_data[:2000, 9], '.', label='inliers 2')
+# plt.legend()
+#
+# plt.figure(16)
+# plt.plot(radar_azimuths, label='radar azimuths')
+# plt.plot(riss_azimuths, label='riss azimuths')
+# plt.legend()
+#
+# # plt.figure(11)
+# # plt.plot(z_vectors[:, 0], label='z x')
+# # plt.legend()
+# # plt.figure(14)
+# # plt.plot(z_vectors[:, 1], label='z y')
+# # plt.legend()
+# # plt.figure(15)
+# # plt.plot(z_vectors[:, 2], label='z vx')
+# # plt.legend()
+# # plt.plot(z_vectors[:, 3], label='z vy')
+# # plt.legend()
+# # plt.figure(17)
+# # plt.plot(z_vectors[:, 4], label='z azimuth')
+# # plt.legend()
+#
+# plt.figure(9)
+# plt.plot(P_set1, label='x')
+# plt.plot(P_set2, label='y')
+# plt.plot(P_set3, label='z')
+# plt.plot(P_set4, label='vx')
+# plt.plot(P_set5, label='vy')
+# plt.plot(P_set6, label='vz')
+# plt.plot(P_set7, label='A')
+# plt.plot(P_set8, label='a_odo')
+# plt.plot(P_set9, label='w')
+# plt.legend()
+#
+# plt.figure(10)
+# plt.plot(correction_data[:, 3], label='vx corrections')
+# plt.plot(correction_data[:, 4], label='vy corrections')
+# plt.legend()
+#
+# plt.figure(12)
+# # plt.plot(outage_times[:, 0], outage_times[:, 1], label='outages')
+# plt.plot(outage_times[:, 1], label='outages')
+# plt.legend()
+#
+# plt.figure(13)
+# plt.plot(corrected_x, corrected_y, label='RISS/Radar')
+# plt.plot(unt_x, unt_y, label='RISS')
+# plt.plot(radar_x, radar_y, label='Radar')
+# plt.plot(outage_positions[:, 0], outage_positions[:, 1], 'r.')
+# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# plt.legend()
+# plt.ylabel('Y Position (m)')
+# plt.xlabel('X Position (m)')
+#
+# plt.figure(16)
+# plt.plot(correction_data[:, 8], label='w corrections')
+# plt.legend()
+#
+# plt.figure(17)
+# plt.plot(odo_vel, 'b.')
+#
+# ##plots of error vs time to see where error is greatest
+#
+# plt.figure(18)
+# plt.plot(e_x, label='x error')
+# plt.plot(e_y, label='y error')
+# plt.legend()
+#
+# plt.figure(19)
+# plt.plot(e_x, label='x error')
+# plt.plot(e_y, label='y error')
+# plt.plot(outage_times[:, 1], label='outages')
+# plt.legend()
+
 # plt.show()
 
-plt.figure(3)
-plt.plot(vx_riss, label='vx riss/radar')
-plt.plot(vx_rad_array, label='vx radar')
-plt.plot(untouched_vx, label='vx riss standalone')
+# animation
 
-plt.legend()
+# y_ref = synched_data[1:-1, 4]
+# x_rad = synched_data[1:-1, 18]
+# y_rad = synched_data[1:-1, 19]
 
-plt.figure(4)
-plt.plot(vy_riss, label='vy riss/radar')
-plt.plot(vy_rad_array, label='vy radar')
-plt.plot(untouched_vy, label='vy riss standalone')
-plt.legend()
-
-plt.figure(5)
-plt.plot(riss_w, label='w riss')
-plt.plot(radar_w, label='w radar')
-plt.legend()
-
-plt.figure(6)
-plt.plot(ref_sol[:, 3], ref_sol[:, 4], label = 'Reference Trajectory')
+# setup animated dot arrays
+outage_array = []
+fusion_array = []
+button_x = 75
+button_y = 82
+for i in range(len(out_flag)):
+    if out_flag[i]:
+        outage_array.append([button_x, button_y])
+        fusion_array.append([np.nan, np.nan])
+    else:
+        outage_array.append([np.nan, np.nan])
+        fusion_array.append([button_x, button_y])
+#
+fig, ax = plt.subplots()
 plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+plt.text(button_x + 4, button_y - 1,'Fusion Indicator')
+
+# line_rad, = ax.plot(radar_x, radar_y, color='b', label = 'radar')
+# line_riss, = ax.plot(unt_x, unt_y, color='g', label='RISS')
+line_fusion, = ax.plot(corrected_x, corrected_y, color='b', label='RISS/radar')
+line_ref, = ax.plot(reference_x, reference_y, color='r', label = 'reference')
+radar_button_on, = ax.plot(fusion_array[:][0], fusion_array[:][1], 'o', color='g')
+radar_button_off, = ax.plot(outage_array[:][0], outage_array[:][1], 'o', color='r')
 plt.legend()
+def update(num, x, y, line):
+    # line_radar.set_data(radar_x[:num], radar_y[:num])
+    #line_riss.set_data(unt_x[:num], unt_y[:num])
+    line_fusion.set_data(corrected_x[:num], corrected_y[:num])
+    line_ref.set_data(reference_x[:num],  reference_y[:num])
+    radar_button_on.set_data(fusion_array[num][0], fusion_array[num][1])
+    radar_button_off.set_data(outage_array[num][0], outage_array[num][1])
+    return line_fusion, line_ref, radar_button_on, radar_button_off,
 
-plt.figure(7)
-plt.plot(radar_data[:2000, 4], '.', label='inliers 1')
-plt.legend()
-
-plt.figure(8)
-plt.plot(radar_data[:2000, 9], '.', label='inliers 2')
-plt.legend()
-
-plt.figure(16)
-plt.plot(radar_azimuths, label='radar azimuths')
-plt.plot(riss_azimuths, label='riss azimuths')
-plt.legend()
-
-# plt.figure(11)
-# plt.plot(z_vectors[:, 0], label='z x')
-# plt.legend()
-# plt.figure(14)
-# plt.plot(z_vectors[:, 1], label='z y')
-# plt.legend()
-# plt.figure(15)
-# plt.plot(z_vectors[:, 2], label='z vx')
-# plt.legend()
-# plt.plot(z_vectors[:, 3], label='z vy')
-# plt.legend()
-# plt.figure(17)
-# plt.plot(z_vectors[:, 4], label='z azimuth')
-# plt.legend()
-
-plt.figure(9)
-plt.plot(P_set1, label='x')
-plt.plot(P_set2, label='y')
-plt.plot(P_set3, label='z')
-plt.plot(P_set4, label='vx')
-plt.plot(P_set5, label='vy')
-plt.plot(P_set6, label='vz')
-plt.plot(P_set7, label='A')
-plt.plot(P_set8, label='a_odo')
-plt.plot(P_set9, label='w')
-plt.legend()
-
-plt.figure(10)
-plt.plot(correction_data[:, 3], label='vx corrections')
-plt.plot(correction_data[:, 4], label='vy corrections')
-plt.legend()
-
-plt.figure(12)
-plt.plot(outage_times[:, 0], outage_times[:, 1], label='outages')
-plt.legend()
-
-plt.figure(13)
-plt.plot(corrected_x, corrected_y, label='RISS/Radar')
-plt.plot(unt_x, unt_y, label='RISS')
-plt.plot(radar_x, radar_y, label='Radar')
-plt.plot(outage_positions[:, 0], outage_positions[:, 1], 'r.')
-plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
-plt.legend()
-plt.ylabel('Y Position (m)')
-plt.xlabel('X Position (m)')
-
-plt.figure(16)
-plt.plot(correction_data[:, 8], label='w corrections')
-plt.legend()
-
-plt.figure(17)
-plt.plot(odo_vel, 'b.')
-
-##plots of error vs time to see where error is greatest
-
-plt.figure(18)
-plt.plot(e_time, e_x, label='x error vs time')
-plt.plot(e_time, e_y, label='y error vs time')
-plt.legend()
-
+ani = animation.FuncAnimation(fig, update, len(radar_x), fargs=[corrected_x, corrected_y, line_fusion],
+                              interval=5, blit=False)
 plt.show()
+ani.save('test.gif')
