@@ -14,14 +14,14 @@ import trajectory_errors
 ref_sol = np.genfromtxt('ref_generated.csv', delimiter=',')
 ref_sol = ref_sol[0:4500, :]
 floor_map = io.loadmat('floor_map.mat')
-imu_odo = np.genfromtxt('imu_and_odo.csv', delimiter=',')
+imu_odo = np.genfromtxt('imu_and_odo_interp_ave.csv', delimiter=',')
 # imu_odo = np.genfromtxt('imu_and_odo.csv', delimiter=',')
 imu_odo = np.transpose(imu_odo)
 
 # 'time', 'velocity_r1',' angular_vel_r1', 'num_detections1', 'num_inliers1', 'average_range1',
 #          'velocity_r2', 'angular_vel_r2', 'num_detections2', 'num_inliers2', 'average_range2', 'combined_velocity',
 #          'combined_angular_vel', 'x', 'y'
-radar_data = np.genfromtxt('r1r2estimates.csv', delimiter=',')
+radar_data = np.genfromtxt('r3r4estimates.csv', delimiter=',')
 
 # rad dat time, x, y, v, w
 # X AND Y ARE MISTAKENLY SWITCHED
@@ -112,7 +112,7 @@ outage_positions = []
 
 out_flag = []
 
-for i in range(1, 2000):
+for i in range(1, 4000):
     rad_sample, imu_sample, i_rad, i_imu, time = synch_for_fusion.get_synched_samples(i_rad, i_imu)
 
     # run riss here, get "riss sample" which will then be used to calculate the Z matrix
@@ -266,69 +266,58 @@ correction_data = np.array(correction_data)
 distance_travelled = np.sum(ref_sol[1:, 1])*(50*0.001)
 print('distance travelled', distance_travelled)
 z_vectors = np.array(z_vectors)
-
-print('fusion results')
-fused_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, corrected_x, corrected_y))
-print(np.shape(fused_data))
-
-pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, fused_data)
-
-total_time = (time_stamps[-1]-time_stamps[0])/(1000 * 60) # time in minutes
-print('total time:', total_time, 'minutes')
-print('fusion position 2d rms:', pos2d_rms)
-print('fusion position 2d max:', pos2d_max)
-
-print('x rms:', x_rms)
-print('x max:', x_max)
-print('y rms:', y_rms)
-print('y max:', y_max)
-print('v rms:', v_rms)
-print('v max:', v_max)
-print('w rms:', w_rms)
-print('w max:', w_max)
-print('percentage of fusion position error to distance travelled', (pos2d_rms/distance_travelled)*100)
-print('percentage of fusion position error to distance travelled', (pos2d_max/distance_travelled)*100)
-print('percentage of fusion position error to distance travelled', (x_rms/distance_travelled)*100)
-print('percentage of fusion position error to distance travelled', (x_max/distance_travelled)*100)
-print('percentage of fusion position error to distance travelled', (y_rms/distance_travelled)*100)
-print('percentage of fusion position error to distance travelled', (y_max/distance_travelled)*100)
-
-
-
-
-print('riss alone results')
-riss_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, unt_x, unt_y))
-pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, riss_data)
-print('total time:', total_time, 'minutes')
-print('riss position 2d rms:', pos2d_rms)
-print('riss position 2d max:', pos2d_max)
-print('x rms:', x_rms)
-print('x max:', x_max)
-print('y rms:', y_rms)
-print('y max:', y_max)
-print('v rms:', v_rms)
-print('v max:', v_max)
-print('w rms:', w_rms)
-print('w max:', w_max)
-
 #
-print('fusion percentage errors')
-e_time, e_x_fusion, e_y_fusion, absolute_errors = trajectory_errors.errors_v_time(ref_sol, fused_data)
-percent_sub50cm, percent_sub1m, percent_sub1_5m, percent_sub2m = trajectory_errors.percentage_analysis(absolute_errors)
-print('percent of time error < 50 cm:', percent_sub50cm)
-print('percent of time error < 1 m:', percent_sub1m)
-print('percent of time error < 1.5 m:', percent_sub1_5m)
-print('percent of time error < 2 m:', percent_sub2m)
-
-print('RISS alone percentage errors')
-e_time, e_x, e_y, absolute_errors = trajectory_errors.errors_v_time(ref_sol, riss_data)
-percent_sub50cm, percent_sub1m, percent_sub1_5m, percent_sub2m = trajectory_errors.percentage_analysis(absolute_errors)
-print('percent of time error < 50 cm:', percent_sub50cm)
-print('percent of time error < 1 m:', percent_sub1m)
-print('percent of time error < 1.5 m:', percent_sub1_5m)
-print('percent of time error < 2 m:', percent_sub2m)
-
-
+# print('fusion results')
+# fused_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, corrected_x, corrected_y))
+# print(np.shape(fused_data))
+#
+# pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, fused_data)
+#
+# total_time = (time_stamps[-1]-time_stamps[0])/(1000 * 60) # time in minutes
+# print('total time:', total_time, 'minutes')
+# print('fusion position 2d rms:', pos2d_rms)
+# print('fusion position 2d max:', pos2d_max)
+#
+# print('x rms:', x_rms)
+# print('x max:', x_max)
+# print('y rms:', y_rms)
+# print('y max:', y_max)
+# print('v rms:', v_rms)
+# print('v max:', v_max)
+# print('w rms:', w_rms)
+# print('w max:', w_max)
+# print('percentage of fusion position error to distance travelled', (pos2d_rms/distance_travelled)*100)
+# print('percentage of fusion position error to distance travelled', (pos2d_max/distance_travelled)*100)
+# print('percentage of fusion position error to distance travelled', (x_rms/distance_travelled)*100)
+# print('percentage of fusion position error to distance travelled', (x_max/distance_travelled)*100)
+# print('percentage of fusion position error to distance travelled', (y_rms/distance_travelled)*100)
+# print('percentage of fusion position error to distance travelled', (y_max/distance_travelled)*100)
+#
+#
+#
+#
+# print('riss alone results')
+# riss_data = np.column_stack((time_stamps[1:], odo_vel, riss_w, unt_x, unt_y))
+# pos2d_rms, pos2d_max, x_rms, x_max, y_rms, y_max, v_rms, v_max, w_rms, w_max = trajectory_errors.get_errors(ref_sol, riss_data)
+# print('total time:', total_time, 'minutes')
+# print('riss position 2d rms:', pos2d_rms)
+# print('riss position 2d max:', pos2d_max)
+# print('x rms:', x_rms)
+# print('x max:', x_max)
+# print('y rms:', y_rms)
+# print('y max:', y_max)
+# print('v rms:', v_rms)
+# print('v max:', v_max)
+# print('w rms:', w_rms)
+# print('w max:', w_max)
+#
+# #
+# e_time, e_x, e_y, absolute_errors = trajectory_errors.errors_v_time(ref_sol, fused_data)
+# percent_sub50cm, percent_sub1m, percent_sub1_5m, percent_sub2m = trajectory_errors.percentage_analysis(absolute_errors)
+# print('percent of time error < 50 cm:', percent_sub50cm)
+# print('percent of time error < 1 m:', percent_sub1m)
+# print('percent of time error < 1.5 m:', percent_sub1_5m)
+# print('percent of time error < 2 m:', percent_sub2m)
 ####### PLOTS #################
 ## Kalman filter, riss and radar plots
 plt.figure(1)
@@ -341,13 +330,13 @@ plt.plot(ref_sol[:, 3], ref_sol[:, 4], 'k', label = 'Reference Trajectory')
 # plt.plot(radar_x, radar_y, label='radar')
 # plt.plot(inc_x, inc_y, label='incremental riss test')
 #
-# #plt.plot(radar_x, radar_y, label='Radar')
-# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
-# # plt.grid()
-# plt.legend()
-# plt.ylabel('Y Position (m)')
-# plt.xlabel('X Position (m)')
-#
+plt.plot(radar_x, radar_y, label='Radar')
+plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
+# plt.grid()
+plt.legend()
+plt.ylabel('Y Position (m)')
+plt.xlabel('X Position (m)')
+
 # plt.figure(2)
 # plt.plot(unt_x, unt_y, 'r', label='RISS')
 # plt.plot(ref_sol[:, 3], ref_sol[:, 4], 'k', label = 'Reference Trajectory')
@@ -454,32 +443,10 @@ plt.plot(ref_sol[:, 3], ref_sol[:, 4], 'k', label = 'Reference Trajectory')
 #
 # ##plots of error vs time to see where error is greatest
 #
-e_x_sq_fusion = [i**2 for i in e_x_fusion]
-e_y_sq_fusion = [i**2 for i in e_y_fusion]
-print(np.shape(e_x_sq_fusion))
-lis = [e_x_sq_fusion, e_y_sq_fusion]
-e_sum_fusion = [sum(x) for x in zip(*lis)]
-print(np.shape(e_sum_fusion))
-e_sq_fusion = [np.sqrt(i) for i in e_sum_fusion]
-
-e_x_sq = [i**2 for i in e_x]
-e_y_sq = [i**2 for i in e_y]
-print(np.shape(e_x_sq_fusion))
-lis = [e_x_sq, e_y_sq]
-e_sum = [sum(x) for x in zip(*lis)]
-print(np.shape(e_sum))
-e_sq = [np.sqrt(i) for i in e_sum]
-
-time_stamps = [i/1000 - 3132.062 for i in time_stamps]
-print(time_stamps[0])
-
-plt.figure(18)
-plt.plot(time_stamps[0:1908], e_sq, label='RISS Position Error (m)')
-plt.plot(time_stamps[0:1908], e_sq_fusion, '--', label='RISS/ESR Position Error(m)')
-plt.xlabel('Time (seconds)')
-plt.ylabel('Error (meters)')
-plt.grid()
-plt.legend()
+# # plt.figure(18)
+# # plt.plot(e_x, label='x error')
+# # plt.plot(e_y, label='y error')
+# # plt.legend()
 # #
 # # plt.figure(19)
 # # plt.plot(e_x, label='x error')
@@ -489,48 +456,3 @@ plt.legend()
 #
 plt.show()
 
-# animation
-
-# y_ref = synched_data[1:-1, 4]
-# x_rad = synched_data[1:-1, 18]
-# y_rad = synched_data[1:-1, 19]
-
-#### ANIMATION SEGMENT
-#
-# # setup animated dot arrays
-# outage_array = []
-# fusion_array = []
-# button_x = 75
-# button_y = 82
-# for i in range(len(out_flag)):
-#     if out_flag[i]:
-#         outage_array.append([button_x, button_y])
-#         fusion_array.append([np.nan, np.nan])
-#     else:
-#         outage_array.append([np.nan, np.nan])
-#         fusion_array.append([button_x, button_y])
-# #
-# fig, ax = plt.subplots()
-# plt.plot(floor_map['floor_map_pcl'][:, 0], floor_map['floor_map_pcl'][:, 1], 'b,')
-# plt.text(button_x + 4, button_y - 1,'Radar Updates')
-#
-# # line_rad, = ax.plot(radar_x, radar_y, color='b', label = 'radar')
-# # line_riss, = ax.plot(unt_x, unt_y, color='g', label='RISS')
-# line_fusion, = ax.plot(corrected_x, corrected_y, color='b', label='RISS/radar')
-# line_ref, = ax.plot(reference_x, reference_y, color='r', label = 'reference')
-# radar_button_on, = ax.plot(fusion_array[:][0], fusion_array[:][1], 'o', color='g')
-# radar_button_off, = ax.plot(outage_array[:][0], outage_array[:][1], 'o', color='r')
-# plt.legend()
-# def update(num, x, y, line):
-#     # line_radar.set_data(radar_x[:num], radar_y[:num])
-#     #line_riss.set_data(unt_x[:num], unt_y[:num])
-#     line_fusion.set_data(corrected_x[:num], corrected_y[:num])
-#     line_ref.set_data(reference_x[:num],  reference_y[:num])
-#     radar_button_on.set_data(fusion_array[num][0], fusion_array[num][1])
-#     radar_button_off.set_data(outage_array[num][0], outage_array[num][1])
-#     return line_fusion, line_ref, radar_button_on, radar_button_off,
-#
-# ani = animation.FuncAnimation(fig, update, len(radar_x), fargs=[corrected_x, corrected_y, line_fusion],
-#                               interval=5, blit=False)
-# plt.show()
-# # ani.save('test.gif')

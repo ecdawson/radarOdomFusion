@@ -2,13 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b92ffc11-b277-4d10-a6ce-00a071ff2f94" name="Default Changelist" comment="jan 25th animation files">
+      <change afterPath="$PROJECT_DIR$/fusion_positions_34_tests.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gen_imu_odo_interp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/imu_and_odo_averaged.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/imu_and_odo_interp_ave.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/imu_interpolated.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/interp_imu_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/combined_est_r3r4.py" beforeDir="false" afterPath="$PROJECT_DIR$/combined_est_r3r4.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fusion_positions.py" beforeDir="false" afterPath="$PROJECT_DIR$/fusion_positions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fusion_wheel_radar.py" beforeDir="false" afterPath="$PROJECT_DIR$/fusion_wheel_radar.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/get_data_rates.py" beforeDir="false" afterPath="$PROJECT_DIR$/get_data_rates.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kf_positions_w.py" beforeDir="false" afterPath="$PROJECT_DIR$/kf_positions_w.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/make_animations.py" beforeDir="false" afterPath="$PROJECT_DIR$/make_animations.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/riss.py" beforeDir="false" afterPath="$PROJECT_DIR$/riss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen_synched_imu_odo.py" beforeDir="false" afterPath="$PROJECT_DIR$/gen_synched_imu_odo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/positions_R1.csv" beforeDir="false" afterPath="$PROJECT_DIR$/positions_R1.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/positions_R2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/positions_R2.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/r3r4estimates.csv" beforeDir="false" afterPath="$PROJECT_DIR$/r3r4estimates.csv" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,8 +33,11 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1iyPqRpuIQJ9ZqGF8XYqSY3ivAL" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -51,6 +60,48 @@
     </option>
   </component>
   <component name="RunManager" selected="Python.fusion_positions">
+    <configuration name="combined_est_r3r4" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Trajectory3" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/combined_est_r3r4.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="combined_pos_est" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Trajectory3" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/combined_pos_est.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="fusion_positions" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Trajectory3" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -72,7 +123,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="fusion_wheel_radar" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="fusion_positions_34_tests" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Trajectory3" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -84,7 +135,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fusion_wheel_radar.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fusion_positions_34_tests.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -93,7 +144,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="gen_analysis_files" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="gen_imu_odo_interp" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Trajectory3" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -105,49 +156,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gen_analysis_files.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="get_data_rates" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Trajectory3" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/get_data_rates.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="make_animations" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Trajectory3" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/make_animations.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/gen_imu_odo_interp.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -159,10 +168,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.fusion_positions" />
-        <item itemvalue="Python.make_animations" />
-        <item itemvalue="Python.get_data_rates" />
-        <item itemvalue="Python.gen_analysis_files" />
-        <item itemvalue="Python.fusion_wheel_radar" />
+        <item itemvalue="Python.fusion_positions_34_tests" />
+        <item itemvalue="Python.combined_est_r3r4" />
+        <item itemvalue="Python.combined_pos_est" />
+        <item itemvalue="Python.gen_imu_odo_interp" />
       </list>
     </recent_temporary>
   </component>
@@ -196,6 +205,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="jan 25th animation files" />
     <option name="LAST_COMMIT_MESSAGE" value="jan 25th animation files" />
   </component>
